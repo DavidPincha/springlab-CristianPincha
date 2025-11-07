@@ -1,0 +1,27 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository  # <--- Faltaba el espacio aquí
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17  # <--- Faltaba el espacio aquí
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build with Gradle  # <--- Faltaba el espacio aquí
+        run: ./gradlew clean build
+
+      - name: Run Test  # <--- Faltaba el espacio aquí
+        run: ./gradlew test
