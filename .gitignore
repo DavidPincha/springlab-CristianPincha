@@ -36,9 +36,9 @@ out/
 ### VS Code ###
 .vscode/
 
-# Logs
+### Logs
 *.log
 
-# SO
-.DS_Store
+###Sistema Operativo
+.DB_STORE
 Thumbs.db
