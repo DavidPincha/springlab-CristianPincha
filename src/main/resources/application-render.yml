@@ -1,13 +1,12 @@
 spring:
-  #Configuracion del datasource
+  # Configuración del datasource (base en memoria H2)
   datasource:
-    url: jdbc:h2:mem:renderdb;DB_CLOSE_DELAY=-1; MODE=MySQL
+    url: jdbc:h2:mem:renderdb;DB_CLOSE_DELAY=-1;MODE=MySQL
     driver-class-name: org.h2.Driver
     username: sa
     password:
 
-
-  #Configuracion de JPA/Hibernate
+  # Configuración de JPA / Hibernate
   jpa:
     hibernate:
       ddl-auto: update
