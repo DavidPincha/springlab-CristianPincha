@@ -44,7 +44,7 @@ public class StudentServiceTest {
         req.setEmail("duplicate@example.com");
         req.setBirthDate(LocalDate.of(2000, 10, 10));
 
-        // Verificar que lance excepción por duplicado
+        // Verificar que lance excepción por 0duplicado
         assertThatThrownBy(() -> service.create(req))
                 .isInstanceOf(ConflictException.class);
     }
