@@ -35,7 +35,14 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Call Render Deploy Hook
+      - name: Check Deploy Hook URL
+        run: |
+          echo "Value received: '$RENDER_DEPLOY_HOOK'"
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+              echo "ERROR: The deploy hook is empty"
+              exit 1
+          fi
+      - name: Trigger Render Deploy
         run: curl -X POST "$RENDER_DEPLOY_HOOK"
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
