@@ -1,0 +1,35 @@
+name: Automatic Rollback
+
+on:
+  workflow_dispatch:   # Permite ejecutarlo manualmente también
+  push:
+    branches:
+      - main
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger rollback if deploy failed
+        run: |
+          echo "Obteniendo lista de deploys..."
+          DEPLOYS=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys")
+
+          LAST_SUCCESSFUL=$(echo $DEPLOYS | jq -r '.[] | select(.status=="live") | .id' | head -n 1)
+
+          if [ -z "$LAST_SUCCESSFUL" ]; then
+            echo "No se encontró un deploy exitoso."
+            exit 1
+          fi
+
+          echo "Revirtiendo al deploy exitoso: $LAST_SUCCESSFUL"
+
+          curl -X POST \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/$LAST_SUCCESSFUL/redeploy"
+
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: srv-d4afj66r433s73ejdkg0
