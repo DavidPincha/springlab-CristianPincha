@@ -1,4 +1,4 @@
-package edu.espe.springlab;
+package edu.espe.springlab.repository;
 
 import edu.espe.springlab.domain.Student;
 import edu.espe.springlab.repository.StudentRepository;
