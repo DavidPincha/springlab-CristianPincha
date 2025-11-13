@@ -35,6 +35,6 @@ public class StudentRepositoryTest {
 
         // Verificar resultados
         assertThat(result).isPresent();
-        assertThat(result.get().getFullName()).isEqualTo("Test User");
+        assertThat(result.get().getFullName()).isEqualTo("NombreIncorrecto");
     }
 }
