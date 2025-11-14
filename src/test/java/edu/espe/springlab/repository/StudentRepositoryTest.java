@@ -15,6 +15,7 @@ public class StudentRepositoryTest {
     @Autowired
     private StudentRepository repository;
 
+    //cristian Pincha
     @Test
     void shouldSaveAndFindStudentByEmail() {
         Student s = new Student();
@@ -28,5 +29,6 @@ public class StudentRepositoryTest {
         var result = repository.findByEmail("test@example.com");
         assertThat(result).isPresent();
         assertThat(result.get().getFullName()).isEqualTo("Test User");
+
     }
 }

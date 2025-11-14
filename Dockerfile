@@ -2,7 +2,7 @@
 FROM gradle:8.4-jdk21 AS builder
 WORKDIR /app
 COPY . .
-RUN gradle clean bootJar
+RUN gradle chmod +x gradlew
 
 # Etapa 2
 FROM eclipse-temurin:21-jdk
