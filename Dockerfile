@@ -1,11 +1,11 @@
 # Etapa 1
-FROM gradle:8.4-jdk21 AS builder
+FROM gradle:8.4-jdk17 AS builder
 WORKDIR /app
 COPY . .
-RUN gradle chmod +x gradlew
+RUN gradle clean bootJar
 
 # Etapa 2
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:17-jdk
 WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 EXPOSE 8080
