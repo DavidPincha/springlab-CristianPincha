@@ -2,7 +2,7 @@
 FROM gradle:8.4-jdk17 AS builder
 WORKDIR /app
 COPY . .
-RUN gradle clean bootJar
+RUN gradlew wrapper (chmod +x gradlew)
 
 # Etapa 2
 FROM eclipse-temurin:17-jdk
