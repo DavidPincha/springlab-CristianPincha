@@ -31,4 +31,12 @@ public class StudentRepositoryTest {
         assertThat(result.get().getFullName()).isEqualTo("Test User");
 
     }
+
+    @Test
+    void testGetByIdNotFoundController() throws Exception {
+        mockMvc.perform(get("/api/entities/9999"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("El recurso con ID 9999 no existe"));
+    }
+
 }

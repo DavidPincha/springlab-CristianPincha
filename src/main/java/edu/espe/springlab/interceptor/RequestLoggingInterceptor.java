@@ -20,4 +20,6 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
         long elapsed = (t0 == null ? 0 : System.currentTimeMillis() - t0);
         System.out.println("afterCompletion -> status = " + response.getStatus() + " tiempo = " + elapsed + " ms");
     }
+
+
 }

@@ -22,6 +22,7 @@ public class StudentServiceTest {
     @Autowired
     private StudentRepository repository;
 
+
     @Test
     void shouldNotAllowDuplicateEmail() {
         // Crear estudiante existente
@@ -41,5 +42,26 @@ public class StudentServiceTest {
         // Esperar que el servicio lance ConflictException
         assertThatThrownBy(() -> service.create(req))
                 .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
+    void findByFullNameContainingIgnoreCase(){
+        //Buscar estudiantes por nombre parcial
+
+        Student parcial = new Student();
+        parcial.setFullName("Parcial");
+        parcial.setBirthDate(LocalDate.of(2000, 10, 10));
+        parcial.setActive(true);
+        repository.save(parcial);
+
+
+        StudentRequestData req = new StudentRequestData();
+        req.setFullName("Parcial");
+        req.setBirthDate(LocalDate.of(2000, 10, 10));
+
+        //esperar la excepcion
+        assertThatThrownBy(() -> service.create(req))
+                .isInstanceOf(ConflictException.class);
+
     }
 }
