@@ -46,8 +46,8 @@ jobs:
           fi
 
       # CAMBIO PARA PROVOCAR FALLA
-      - name: Ejecutar deploy en Render (fallo intencional)
-        run: curl -X POST "https://url-falsa-para-probar-fallo.com"
+      - name: Ejecutar deploy en Render
+        run: curl -X POST "$RENDER_DEPLOY_HOOK"
 
   rollback:
     needs: deploy
