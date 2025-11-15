@@ -20,7 +20,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Grant execute permission for gradlew
+      - name: Permissions Gradlew
         run: chmod +x ./gradlew
 
       - name: Build project
@@ -29,22 +29,28 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+
     env:
       RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
 
     steps:
-      - name: Check Deploy Hook URL
+      - name: Confirmar deploy hook
         run: |
-          echo "Value received: '$RENDER_DEPLOY_HOOK'"
           if [ -z "$RENDER_DEPLOY_HOOK" ]; then
-              echo "ERROR: The deploy hook is empty"
-              exit 1
+            echo "Deploy hook vacío, no se puede desplegar."
+            exit 1
           fi
 
-      - name: Trigger Render Deploy
-        run: curl -X POST "$RENDER_DEPLOY_HOOK"
+      - name: Ejecutar deploy en Render (fallo intencional)
+        run: curl -X POST "https://url-falsa-para-probar-fallo.com"
+
+  rollback:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: failure()
+
+    uses: ./.github/workflows/rollback.yml
