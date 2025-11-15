@@ -17,21 +17,19 @@ jobs:
           DEPLOYS=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
             "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys")
 
-          echo "Deploys obtenidos:"
           echo "$DEPLOYS"
 
-          LAST_SUCCESSFUL=$(echo $DEPLOYS | jq -r '.[] | select(.status=="live" or .status=="succeeded" or .status=="deployed") | .id' | head -n 1)
+          LAST_SUCCESSFUL=$(echo "$DEPLOYS" | jq -r '.[] | select(.status=="live") | .id' | head -n 1)
 
           if [ -z "$LAST_SUCCESSFUL" ]; then
-              echo "No se encontró un deploy exitoso. Saltando rollback."
-              exit 0
+            echo "No se encontró un deploy exitoso. No se ejecutará rollback."
+            exit 0
           fi
 
-          echo "Último deploy válido encontrado: $LAST_SUCCESSFUL"
-          
-          echo "Ejecutando rollback..."
+          echo "Último deploy exitoso: $LAST_SUCCESSFUL"
+
           curl -X POST \
             -H "Authorization: Bearer $RENDER_API_KEY" \
-            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/$LAST_SUCCESSFUL/redeploy"
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/$LAST_SUCCESSFUL/rollback"
 
-          echo "Rollback ejecutado correctamente."
+          echo "Rollback ejecutado con éxito."
