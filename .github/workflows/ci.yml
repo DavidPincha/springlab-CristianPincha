@@ -29,6 +29,12 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
+      # --------- LITERAL D ----------
+      - name: Mostrar APP_VERSION para evidencia
+        run: |
+          echo "APP_VERSION=build-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}"
+        shell: bash
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -46,8 +52,5 @@ jobs:
             exit 1
           fi
 
-
       - name: Ejecutar deploy en Render
         run: curl -X POST "$RENDER_DEPLOY_HOOK"
-
-
