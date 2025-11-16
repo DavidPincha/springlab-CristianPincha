@@ -31,4 +31,4 @@ server:
   port: 8080
 
   app:
-  version: "local-dev"
+  version: ${APP_VERSION:dev}
