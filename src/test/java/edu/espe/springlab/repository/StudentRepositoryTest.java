@@ -18,7 +18,6 @@ public class StudentRepositoryTest {
     private StudentRepository studentRepository;
 
     @Test
-    @DisplayName("Debe guardar y buscar un estudiante por email correctamente")
     void shouldSaveAndFindStudentByEmail() {
         // Crear objeto estudiante
         Student s = new Student();

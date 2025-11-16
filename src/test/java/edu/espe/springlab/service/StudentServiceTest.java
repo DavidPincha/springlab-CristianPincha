@@ -16,7 +16,7 @@ import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
-@Import(StudentServiceImpl.class) // Importar la implementación real del servicio
+@Import(StudentServiceImpl.class)
 public class StudentServiceTest {
 
     @Autowired
@@ -26,11 +26,10 @@ public class StudentServiceTest {
     private StudentRepository repository;
 
     @Test
-    @DisplayName("Debe lanzar excepción si se intenta registrar un email duplicado")
     void shouldNotAllowDuplicateEmails() {
         // Crear estudiante existente
         Student existing = new Student();
-        existing.setFullName("Existing User");
+        existing.setFullName("Existing");
         existing.setEmail("duplicate@example.com");
         existing.setBirthDate(LocalDate.of(2000, 10, 10));
         existing.setActive(true);
@@ -40,7 +39,7 @@ public class StudentServiceTest {
 
         // Crear nuevo request con el mismo email
         StudentRequestData req = new StudentRequestData();
-        req.setFullName("New User Duplicate");
+        req.setFullName("Duplicate");
         req.setEmail("duplicate@example.com");
         req.setBirthDate(LocalDate.of(2000, 10, 10));
 
