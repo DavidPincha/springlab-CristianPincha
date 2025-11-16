@@ -3,32 +3,131 @@ name: CI/CD Pipeline with Rollback
 on:
   push:
     branches:
-      - main # O la rama que uses para desplegar
+      - main
 
 # Permisos necesarios para que el job de 'deploy' pueda hacer push
 permissions:
   contents: write
 
 jobs:
+
   build:
-    name: Build & Test
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Permissions Gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build and Test with Gradle
+        # Usamos 'build' que ya incluye 'test'
+        run: ./gradlew clean build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
         with:
-          java-version: '21' # Ajusta tu versión de Java
-          distribution: 'temurin'
+          # Token para poder hacer push del cambio de versión
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+      - name: Get short SHA
+        id: vars
+        run: echo "short_sha=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
 
-      - name: Build and test with Gradle
-        run: ./gradlew clean build # 'build' incluye 'test' automáticamente
+      # --- Parte d) Actualizar la versión en application.yml ---
+      - name: Set App Version and Push
+        run: |
+          NEW_VERSION="build-${{ github.run_number }}-${{ env.short_sha }}"
+          echo "Setting version to $NEW_VERSION"
 
-  deploy:
-    name: Deploy to Render
-# ... (el resto del archivo no cambia) ...
+          # Reemplaza el placeholder en el archivo
+          sed -i 's/version: "local-dev"/version: "${NEW_VERSION}"/' src/main/resources/application.yml
+          
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git add src/main/resources/application.yml
+          git commit -m "ci: Set app version to ${NEW_VERSION}"
+          git push
+
+      # --- Parte b) y c) Desplegar, Monitorear y Fallar si es necesario ---
+      - name: Trigger and Poll Render Deploy
+        id: deploy_poll
+        env:
+          # ¡OJO! Ahora usa RENDER_API_KEY, no RENDER_DEPLOY_HOOK
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          COMMIT_TO_DEPLOY: ${{ github.sha }} # El commit que acabamos de pushear
+        run: |
+          echo "Triggering deploy for commit $COMMIT_TO_DEPLOY..."
+          
+          DEPLOY_RESPONSE=$(curl -s -X POST -H "Authorization: Bearer $RENDER_API_KEY" \
+                                 -H "Accept: application/json" \
+                                 -H "Content-Type: application/json" \
+                                 -d "{\"commitId\": \"$COMMIT_TO_DEPLOY\", \"clearCache\": true}" \
+                                 "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys")
+          
+          DEPLOY_ID=$(echo $DEPLOY_RESPONSE | jq -r '.id')
+          if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" == "null" ]; then
+             echo "::error::Failed to trigger deploy. Response:"
+             echo $DEPLOY_RESPONSE | jq
+             exit 1
+          fi
+
+          echo "Deploy started. ID: $DEPLOY_ID. Polling status..."
+          STATUS="created"
+          TIMEOUT_MINUTES=15
+          SECONDS_WAITED=0
+          
+          while [ "$STATUS" != "live" ]; do
+            sleep 30
+            SECONDS_WAITED=$((SECONDS_WAITED + 30))
+
+            STATUS_RESPONSE=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
+                                   -H "Accept: application/json" \
+                                   "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/$DEPLOY_ID")
+          
+            STATUS=$(echo $STATUS_RESPONSE | jq -r '.status')
+            echo "Current status: $STATUS"
+
+            if [[ "$STATUS" == "build_failed" || "$STATUS" == "deploy_failed" || "$STATUS" == "canceled" ]]; then
+              echo "::error::Deploy $DEPLOY_ID failed with status: $STATUS"
+              # Esto es lo más importante: ¡falla el job!
+              exit 1
+            fi
+          
+            if [ $SECONDS_WAITED -gt $((TIMEOUT_MINUTES * 60)) ]; then
+              echo "::error::Deploy $DEPLOY_ID timed out after $TIMEOUT_MINUTES minutes."
+              exit 1
+            fi
+          done
+
+          echo "Deploy $DEPLOY_ID is live! Succeeded."
+
+  # --- Parte a) y c) Job de Rollback ---
+  trigger-rollback:
+    name: Trigger Rollback on Failure
+    needs: deploy
+    # Esta condición AHORA SÍ FUNCIONARÁ, porque el job 'deploy' puede fallar
+    if: failure()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call Rollback Workflow
+        # Llama al otro archivo que crearemos
+        uses: ./.github/workflows/rollback.yml
+        with:
+          render_service_id: ${{ secrets.RENDER_SERVICE_ID }}
+        secrets:
+          render_api_key: ${{ secrets.RENDER_API_KEY }}
