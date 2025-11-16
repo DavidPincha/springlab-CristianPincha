@@ -18,10 +18,11 @@ public class StudentRepositoryTest {
     private StudentRepository studentRepository;
 
     @Test
+
     void shouldSaveAndFindStudentByEmail() {
         // Crear objeto estudiante
         Student s = new Student();
-        s.setFullName("Test User");
+        s.setFullName("Test falso");
         s.setEmail("test@example.com");
         s.setBirthDate(LocalDate.of(2000, 10, 10));
         s.setActive(true);
